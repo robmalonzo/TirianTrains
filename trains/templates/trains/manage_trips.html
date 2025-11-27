@@ -1,0 +1,39 @@
+<h1>Planning Ticket #{{ ticket.ticket_number }}</h1>
+<a href="{% url 'ticket_list' %}">Go Back to Dashboard</a>
+
+<h3>Available Trips</h3>
+<table border="1" cellpadding="5">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Route</th>
+            <th>Time</th>
+            <th>Cost</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for trip in all_trips %}
+        <tr>
+            <td>{{ trip.schedule_date }}</td>
+            <td>{{ trip.origin }} &rarr; {{ trip.destination }}</td>
+            <td>{{ trip.departure_time }} - {{ trip.arrival_time }}</td>
+            <td>{{ trip.cost }}</td>
+            <td>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="trip_id" value="{{ trip.id }}">
+                    
+                    {% if trip.id in selected_trip_ids %}
+                        <button type="submit" name="remove" style="color:red;">Remove</button>
+                    {% else %}
+                        <button type="submit" name="add" style="color:green;">Add to Ticket</button>
+                    {% endif %}
+                </form>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No trips found in the system.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>

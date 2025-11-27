@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard - Tirian Trains</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        a { text-decoration: none; }
+        .ticket-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
+        .btn-create { background-color: green; color: white; padding: 10px 20px; border-radius: 5px; border: none; font-size: 16px; cursor: pointer; }
+        .btn-logout { cursor: pointer; background: none; border: none; color: blue; text-decoration: underline; font-size: 1em; }
+    </style>
+</head>
+<body>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>My Tickets</h1>
+        <div>
+            Logged in as: <strong>{{ user.username }}</strong> | 
+            <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-logout">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <a href="{% url 'create_ticket' %}">
+        <button class="btn-create">+ Create New Ticket</button>
+    </a>
+
+    <hr>
+
+    {% for ticket in tickets %}
+        <div class="ticket-card">
+            <h3>Ticket #{{ ticket.ticket_number }}</h3>
+            <p><strong>Total Cost:</strong> {{ ticket.total_cost }} coins</p>
+            
+            <h4>Itinerary:</h4>
+            <ul>
+                {% for trip in ticket.trips.all %}
+                    <li style="margin-bottom: 8px;">
+                        <strong>Train #{{ trip.id }}: {{ trip.origin }} to {{ trip.destination }}</strong>
+                        <br>
+                        <span style="color: #555;">
+                            Departs: {{ trip.departure_time }}  &mdash;  Arrives: {{ trip.arrival_time }}
+                        </span>
+                    </li>
+                {% empty %}
+                    <li style="color: red;">No trips selected.</li>
+                {% endfor %}
+            </ul>
+            
+            <a href="{% url 'manage_trips' ticket.id %}" style="color: #007bff; font-weight: bold;">
+                Edit Ticket / Add Trips
+            </a>
+        </div>
+    {% empty %}
+        <p>You have no tickets. Click "Create New Ticket" to start!</p>
+    {% endfor %}
+
+</body>
+</html>
