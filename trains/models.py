@@ -7,25 +7,41 @@ class Customer(AbstractUser):
     GENDER_CHOICES = [('M', 'Male'), ('F', 'Female'), ('O', 'Other')]
     birth_date = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)
-
     def __str__(self): return self.username
 
+class TrainSystem(models.Model):
+    SYSTEM_TYPES = [
+        ('Local', 'Local System'),         
+        ('Inter-town', 'Inter-town System') 
+    ]
+    
+    system_name = models.CharField(max_length=100) 
+    system_type = models.CharField(max_length=20, choices=SYSTEM_TYPES)
+    
+    is_one_way = models.BooleanField(help_text="True = Local, False = Inter-town")
+
+    def __str__(self):
+        return f"{self.system_name} ({self.system_type})"
+
 class Station(models.Model):
+    train_system = models.ForeignKey(TrainSystem, on_delete=models.CASCADE, related_name='stations', null=True)
+    
     station_name = models.CharField(max_length=100)
-    def __str__(self): return self.station_name
+    
+    def __str__(self): 
+        return f"{self.station_name} ({self.train_system.system_name if self.train_system else 'No System'})"
 
 class Train(models.Model):
-    model_name = models.CharField(max_length=50) 
-    model_no = models.CharField(max_length=20)   
+    model_name = models.CharField(max_length=50)
+    model_no = models.CharField(max_length=20)
     max_speed = models.IntegerField(help_text="km/h")
-    no_of_seats = models.IntegerField(default=50)       
-    no_of_toilets = models.IntegerField(default=2)      
-    
+    no_of_seats = models.IntegerField(default=50)
+    no_of_toilets = models.IntegerField(default=2)
     has_reclining_seats = models.BooleanField(default=False)
-    has_folding_tables = models.BooleanField(default=False)  
+    has_folding_tables = models.BooleanField(default=False)
     has_disability_access = models.BooleanField(default=False)
-    has_luggage_storage = models.BooleanField(default=False)  
-    has_vending_machine = models.BooleanField(default=False)  
+    has_luggage_storage = models.BooleanField(default=False)
+    has_vending_machine = models.BooleanField(default=False)
     has_food_service = models.BooleanField(default=False)
 
     def __str__(self): return f"{self.model_name} ({self.model_no})"
@@ -36,10 +52,9 @@ class MaintenanceInspection(models.Model):
     date_completed = models.DateField()
     crew_in_charge = models.CharField(max_length=100)
     task_completed = models.TextField()
-    condition = models.CharField(max_length=50) 
+    condition = models.CharField(max_length=50)
 
-    def __str__(self):
-        return f"Insp #{self.maintenance_no} - {self.train.model_no}"
+    def __str__(self): return f"Insp #{self.maintenance_no}"
 
 class Trip(models.Model):
     train = models.ForeignKey(Train, on_delete=models.CASCADE, related_name='trips', null=True)
@@ -71,7 +86,6 @@ class Ticket(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     trips = models.ManyToManyField(Trip, blank=True)
     ticket_number = models.PositiveIntegerField(default=1)
-    
     seat_class = models.CharField(max_length=20, choices=SEAT_CLASSES, default='Economy')
     trip_type = models.CharField(max_length=20, choices=TRIP_TYPES, default='One-Way')
 
@@ -83,5 +97,3 @@ class Ticket(models.Model):
             count = Ticket.objects.filter(customer=self.customer).count()
             self.ticket_number = count + 1
         super().save(*args, **kwargs)
-
-    def __str__(self): return f"Ticket #{self.ticket_number}"

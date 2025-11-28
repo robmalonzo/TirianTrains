@@ -10,4 +10,6 @@ urlpatterns = [
     path('', views.ticket_list, name='ticket_list'), 
     path('ticket/new/', views.create_ticket, name='create_ticket'),
     path('ticket/<int:ticket_id>/trips/', views.manage_trips, name='manage_trips'),
+
+    path('train/<int:train_id>/maintenance/', views.train_maintenance, name='train_maintenance'),
 ]

@@ -3,6 +3,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from .models import Ticket, Trip
 from .forms import CustomerSignUpForm
+from .models import Ticket, Trip, Train, MaintenanceInspection
 
 def signup(request):
     if request.method == 'POST':
@@ -28,7 +29,8 @@ def create_ticket(request):
 @login_required
 def manage_trips(request, ticket_id):
     ticket = get_object_or_404(Ticket, id=ticket_id, customer=request.user)
-    all_trips = Trip.objects.all().order_by('schedule_date')
+    
+    all_trips = Trip.objects.all().order_by('schedule_date', 'departure_time')
 
     if request.method == "POST":
         trip_id = request.POST.get('trip_id')
@@ -45,6 +47,17 @@ def manage_trips(request, ticket_id):
         'ticket': ticket,
         'all_trips': all_trips,
         'selected_trip_ids': list(ticket.trips.values_list('id', flat=True)),
-        'saved_trips': ticket.trips.all()
+        
+        'saved_trips': ticket.trips.all().order_by('schedule_date', 'departure_time')
     }
     return render(request, 'trains/manage_trips.html', context)
+
+@login_required
+def train_maintenance(request, train_id):
+    train = get_object_or_404(Train, id=train_id)
+    inspections = MaintenanceInspection.objects.filter(train=train).order_by('-date_completed')
+    
+    return render(request, 'trains/maintenance_history.html', {
+        'train': train,
+        'inspections': inspections
+    })
