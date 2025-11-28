@@ -14,14 +14,27 @@
 </head>
 <body>
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h1>My Tickets</h1>
-        <div>
-            Logged in as: <strong>{{ user.username }}</strong> | 
-            <form action="{% url 'logout' %}" method="post" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn-logout">Logout</button>
-            </form>
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+        <h1 style="margin-top: 0;">My Tickets</h1>
+        
+        <div style="text-align: right;">
+            
+            <div style="margin-bottom: 4px;">
+                Logged in as: <strong>{{ user.username }}</strong> | 
+                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-logout">Logout</button>
+                </form>
+            </div>
+
+            <div style="font-size: 1em; color: #333;">
+                {{ user.first_name }} {{ user.last_name }}
+            </div>
+
+            <div style="font-size: 0.9em; color: #666;">
+                {{ user.email }}
+            </div>
+
         </div>
     </div>
 

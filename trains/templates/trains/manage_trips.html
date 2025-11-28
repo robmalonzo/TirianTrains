@@ -1,39 +1,117 @@
-<h1>Planning Ticket #{{ ticket.ticket_number }}</h1>
-<a href="{% url 'ticket_list' %}">Go Back to Dashboard</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Ticket - Tirian Trains</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; min-height: 100vh; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #2c3e50; margin: 0 0 5px 0; }
+        a { text-decoration: none; color: #007bff; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #666; font-size: 0.9em; }
+        
+        .trip-card { background-color: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .trip-info h3 { margin: 0 0 5px 0; color: #2c3e50; font-size: 1.2em; }
+        .trip-meta { color: #666; font-size: 0.95em; margin-bottom: 8px; }
+        
+        .trip-action { text-align: right; min-width: 120px; }
+        .trip-cost { display: block; font-size: 1.4em; font-weight: bold; color: #28a745; margin-bottom: 10px; }
+        
+        button { padding: 8px 16px; border-radius: 5px; font-weight: bold; font-size: 14px; border: none; cursor: pointer; width: 100%; }
+        button[name="add"] { background-color: #007bff; color: white; }
+        button[name="remove"] { background-color: #dc3545; color: white; }
+        .saved-box { background: #e8f4fd; border: 1px solid #b0d4ff; padding: 15px; border-radius: 8px; margin-bottom: 30px; }
+        
+        .spec-tag { display: inline-block; background: #eee; padding: 3px 6px; border-radius: 4px; font-size: 0.8em; margin-right: 4px; margin-bottom: 4px; color: #444; }
+        .maint-tag { color: green; font-weight: bold; font-size: 0.85em; }
+    </style>
+</head>
+<body>
 
-<h3>Available Trips</h3>
-<table border="1" cellpadding="5">
-    <thead>
-        <tr>
-            <th>Date</th>
-            <th>Route</th>
-            <th>Time</th>
-            <th>Cost</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for trip in all_trips %}
-        <tr>
-            <td>{{ trip.schedule_date }}</td>
-            <td>{{ trip.origin }} &rarr; {{ trip.destination }}</td>
-            <td>{{ trip.departure_time }} - {{ trip.arrival_time }}</td>
-            <td>{{ trip.cost }}</td>
-            <td>
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="trip_id" value="{{ trip.id }}">
-                    
-                    {% if trip.id in selected_trip_ids %}
-                        <button type="submit" name="remove" style="color:red;">Remove</button>
-                    {% else %}
-                        <button type="submit" name="add" style="color:green;">Add to Ticket</button>
-                    {% endif %}
-                </form>
-            </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="5">No trips found in the system.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="container">
+    <a href="{% url 'ticket_list' %}" class="back-link">&larr; Back to Dashboard</a>
+    
+    <h1>Planning Ticket #{{ ticket.ticket_number }}</h1>
+    <p style="color: gray; margin-top: 0;">
+        Customer: {{ ticket.customer.username }} | 
+        Type: {{ ticket.trip_type }} | 
+        Class: {{ ticket.seat_class }}
+    </p>
+
+    <div class="saved-box">
+        <h3 style="margin-top: 0; color: #007bff;">Your Current Itinerary</h3>
+        {% if saved_trips %}
+            <ul style="padding-left: 20px; margin-bottom: 10px;">
+                {% for trip in saved_trips %}
+                <li style="margin-bottom: 5px;">
+                    <strong>{{ trip.origin }} to {{ trip.destination }}</strong> 
+                    <span style="color: #666;">({{ trip.schedule_date }} @ {{ trip.departure_time }})</span>
+                </li>
+                {% endfor %}
+            </ul>
+            <div style="text-align: right; font-size: 1.2em; font-weight: bold;">
+                Total: ${{ ticket.total_cost }}
+            </div>
+        {% else %}
+            <p style="margin-bottom: 0;">No trips added yet.</p>
+        {% endif %}
+    </div>
+
+    <hr style="margin: 30px 0; border: 0; border-top: 1px solid #ddd;">
+
+    <h2 style="margin-bottom: 20px;">Available Trips</h2>
+
+    {% for trip in all_trips %}
+    <div class="trip-card">
+        
+        <div class="trip-info">
+            <h3>{{ trip.origin }} &rarr; {{ trip.destination }}</h3>
+            
+            <div class="trip-meta">
+                <strong>{{ trip.schedule_date }}</strong> | 
+                {{ trip.departure_time }} - {{ trip.arrival_time }}
+                ({{ trip.duration }})
+            </div>
+
+            <div style="margin-top: 10px;">
+                <strong>Train: {{ trip.train.model_name }}</strong> 
+                {% if trip.train.inspections.first %}
+                   <span class="maint-tag"> (Cond: {{ trip.train.inspections.first.condition }})</span>
+                {% endif %}
+                <br>
+                
+                <span class="spec-tag">Speed: {{ trip.train.max_speed }}km/h</span>
+                <span class="spec-tag">Seats: {{ trip.train.no_of_seats }}</span>
+                <span class="spec-tag">Toilets: {{ trip.train.no_of_toilets }}</span>
+                
+                {% if trip.train.has_food_service %}<span class="spec-tag">🍔 Food</span>{% endif %}
+                {% if trip.train.has_reclining_seats %}<span class="spec-tag">💺 Reclining</span>{% endif %}
+                {% if trip.train.has_folding_tables %}<span class="spec-tag">Tables</span>{% endif %}
+                {% if trip.train.has_luggage_storage %}<span class="spec-tag">Luggage</span>{% endif %}
+                {% if trip.train.has_vending_machine %}<span class="spec-tag">Vending</span>{% endif %}
+                {% if trip.train.has_disability_access %}<span class="spec-tag">♿ Access</span>{% endif %}
+            </div>
+        </div>
+
+        <div class="trip-action">
+            <span class="trip-cost">${{ trip.cost }}</span>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="trip_id" value="{{ trip.id }}">
+                {% if trip.id in selected_trip_ids %}
+                    <button type="submit" name="remove">Remove</button>
+                {% else %}
+                    <button type="submit" name="add">+ Add</button>
+                {% endif %}
+            </form>
+        </div>
+
+    </div>
+    {% empty %}
+        <p>No trips found.</p>
+    {% endfor %}
+
+</div>
+</body>
+</html>

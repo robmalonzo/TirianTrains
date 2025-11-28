@@ -38,12 +38,13 @@ def manage_trips(request, ticket_id):
             ticket.trips.add(trip)
         elif 'remove' in request.POST:
             ticket.trips.remove(trip)
-        
+            
         return redirect('manage_trips', ticket_id=ticket.id)
 
     context = {
         'ticket': ticket,
         'all_trips': all_trips,
-        'selected_trip_ids': ticket.trips.values_list('id', flat=True)
+        'selected_trip_ids': list(ticket.trips.values_list('id', flat=True)),
+        'saved_trips': ticket.trips.all()
     }
     return render(request, 'trains/manage_trips.html', context)

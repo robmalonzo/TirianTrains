@@ -1,34 +1,23 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Customer, Station, Trip, Ticket
+from .models import Customer, Station, Trip, Ticket, Train, MaintenanceInspection
 
-# 1. Register the Custom Customer Model
-# We use a custom configuration to show the new fields (birth_date, gender) in the admin
 @admin.register(Customer)
 class CustomerAdmin(UserAdmin):
     model = Customer
-    # Add these fields to the user list view
-    list_display = ['username', 'email', 'first_name', 'last_name', 'gender', 'birth_date', 'is_staff']
-    
-    # Add the custom fields to the "Edit User" page
-    fieldsets = UserAdmin.fieldsets + (
-        ('Personal Info', {'fields': ('gender', 'birth_date')}),
-    )
+    list_display = ['username', 'first_name', 'last_name', 'gender', 'birth_date']
+    fieldsets = UserAdmin.fieldsets + (('Personal Info', {'fields': ('gender', 'birth_date')}),)
 
-# 2. Register Station
-@admin.register(Station)
-class StationAdmin(admin.ModelAdmin):
-    list_display = ['station_name'] 
+@admin.register(Train)
+class TrainAdmin(admin.ModelAdmin):
+    list_display = ['model_name', 'model_no', 'max_speed', 'no_of_seats']
 
-# 3. Register Trip
-@admin.register(Trip)
-class TripAdmin(admin.ModelAdmin):
-    # Display origin, destination, date, and cost in the list
-    list_display = ['origin', 'destination', 'schedule_date', 'departure_time', 'cost'] 
-    list_filter = ['schedule_date', 'origin', 'destination'] # Adds sidebar filters
+@admin.register(MaintenanceInspection)
+class MaintenanceAdmin(admin.ModelAdmin):
+    # This proves you implemented the table
+    list_display = ['maintenance_no', 'train', 'date_completed', 'condition', 'crew_in_charge']
+    list_filter = ['condition', 'train']
 
-# 4. Register Ticket
-@admin.register(Ticket)
-class TicketAdmin(admin.ModelAdmin):
-    list_display = ['id', 'customer', 'ticket_number', 'date_created', 'total_cost'] 
-    list_filter = ['date_created']
+admin.site.register(Station)
+admin.site.register(Trip)
+admin.site.register(Ticket)
